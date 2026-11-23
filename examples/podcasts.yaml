@@ -1,0 +1,74 @@
+# podcasts.yaml — example configuration.
+# Copy to ./podcasts.yaml (or ~/.config/podcasts/podcasts.yaml) and fill in your values.
+# API keys are referenced via ${ENV_VAR}; export them before running.
+# Never commit a real config file with real keys (see .gitignore).
+
+# ---------- PRIMARY LLM ----------
+# Used for research, summarization and writing.
+llm:
+  base_url: "http://127.0.0.1:8080/v1"   # OpenAI-compatible endpoint (llama.cpp server, Ollama, OpenAI, ...)
+  api_key: "${LLM_API_KEY}"               # may be empty for an open local server
+  model: "my-primary-model"
+  temperature: 0.7
+  max_tokens: 4096
+
+# ---------- CRITIC ----------
+# Independent from the primary LLM. Drives the critique (and the decision).
+critic:
+  llm:
+    base_url: "http://127.0.0.1:8080/v1"   # often the same server as the primary
+    api_key: "${CRITIC_API_KEY}"           # optional
+    model: "my-critic-model"
+    temperature: 0.2
+    max_tokens: 2048
+  decision: "llm"                          # "llm" | "systemone"
+  systemone:                               # required only for decision == "systemone"
+    base_url: "http://127.0.0.1:8081/v1"   # llama.cpp server serving an OpenJev-compatible decision model
+    path: "/v1/systemone"
+    api_key: "${SYSTEMONE_API_KEY}"        # optional
+    threshold: 0.5                         # noul probability needed for "pass"
+  # grammar: ""                            # optional path to a GBNF file (llama.cpp only)
+  # schema_style: "llamacpp"               # "llamacpp" | "openai" (controls structured-output request shape)
+
+# ---------- TTS ----------
+# Cloud (OpenAI) or local llama.cpp llama-server — same /v1/audio/speech shape.
+tts:
+  base_url: "http://127.0.0.1:8083/v1"     # local llama.cpp; cloud: "https://api.openai.com/v1"
+  api_key: "${TTS_API_KEY}"                # optional locally
+  model: "pocket-tts"                      # server-reported model name
+  voice: "default"                         # model-dependent
+  format: "wav"                            # wav | mp3 | ...
+  speed: 1.0
+
+# ---------- SEARCH / SOURCES ----------
+search:
+  provider: "none"                         # none | brave | tavily | serper
+  api_key: "${SEARCH_API_KEY}"             # required for brave/tavily/serper
+  max_results_per_query: 8
+
+sources:
+  arxiv: true                              # keyless, always useful
+  trusted_urls:                            # prefix-matched; agent may fetch only these
+    - "https://arxiv.org/"
+
+# ---------- PIPELINE ----------
+pipeline:
+  max_iterations: 4                        # research+write+critique loops
+  target_minutes: 17                       # 15..20
+  words_per_minute: 150
+  pass_threshold: 0.8                      # critique score needed to pass (llm decision path)
+  max_research_steps: 8                    # tool-call cap per research pass
+  time_budget: "10m"                       # global wall-clock cap
+
+# ---------- PATHS ----------
+paths:
+  output_dir: "out"
+  cache_dir: ""                            # optional (reserved for future use)
+
+# ---------- PROMPTS (optional) ----------
+# Override any baked-in prompt. Priority: inline > file > default.
+# prompts:
+#   overrides:
+#     script.system: "You are a podcast writer."
+#   files:
+#     critic.system: "prompts/critic.system.txt"

@@ -3,8 +3,9 @@
 /out/
 /.podcasts-cache/
 
-# real configs with keys — never commit
-podcasts.yaml
+# real configs with keys — never commit (only the root-level real config;
+# the template at examples/podcasts.yaml is safe to commit)
+/podcasts.yaml
 .env
 *.env
 !.env.example
